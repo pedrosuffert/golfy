@@ -6,8 +6,11 @@ use bevy::{
     sprite::MaterialMesh2dBundle,
 };
 
+//Game Resolution
+const RESOLUTION: Vec2 = Vec2::new(1920.0, 1080.0);
+
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
-const BALL_STARTING_POSITION: Vec3 = Vec3::new(0.0, -50.0, 1.0);
+const BALL_STARTING_POSITION: Vec3 = Vec3::new(0.0, -100.0, 1.0);
 const BALL_SIZE: Vec3 = Vec3::new(15.0, 15.0, 0.0);
 const BALL_SPEED: f32 = 500.0;
 const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);
@@ -177,7 +180,13 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
+    mut window_query: Query<&mut Window>,
 ) {
+
+    //Resolution
+    let mut window = window_query.single_mut();
+    window.resolution.set(RESOLUTION.x, RESOLUTION.y);
+
     // Camera
     commands.spawn(Camera2dBundle::default());
 
@@ -205,8 +214,8 @@ fn setup(
     //     Collider,
     // ));
 
-    // Ball
 
+    // Golf Hole
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes.add(shape::Circle::default().into()).into(),
@@ -216,8 +225,11 @@ fn setup(
             ..default()
         },
         GolfHole,
+        Collider
     ));
 
+
+    // Ball
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes.add(shape::Circle::default().into()).into(),
@@ -347,15 +359,18 @@ fn set_ball_velocity(
     mut window_query: Query<&mut Window>
 ) {
     let (mut ball_velocity, ball_transform) = ball_query.single_mut();
-    let cursor_position = window_query.single_mut().physical_cursor_position().unwrap_or(Vec2::new(0.0, 0.0));
+    let cursor_position = window_query.single_mut().cursor_position().unwrap_or(Vec2::new(0.0, 0.0));
 
     let ball_position = ball_transform.translation;
     let ball_velocity_vector = Vec2::new(
-            cursor_position.x - ball_position.x,
-            cursor_position.y - ball_position.y
+        cursor_position.x - (ball_position.x + window_query.single_mut().width()/2.0) ,
+        - cursor_position.y + (window_query.single_mut().height()/2.0 - ball_position.y),
     );
 
-    // println!("{} {}", ball_velocity_vector.x, ball_velocity_vector.y);
+
+    // println!("{} {} {} {}", cursor_position.x, ball_position.x + RESOLUTION.x/2.0, cursor_position.y, ball_position.y + RESOLUTION.y/2.0);
+
+    println!("{} {}", ball_velocity_vector.x, ball_velocity_vector.y);
 
     if mouse_input.pressed(MouseButton::Left) {
         *ball_velocity = Velocity(ball_velocity_vector);
@@ -411,15 +426,17 @@ fn uptade_ball_velocity(
         }
     }
 
-    if ball_velocity.x.abs() == 0.0 && ball_velocity.y.abs() == 0.0 {
+
+    println!("{} {}", ball_velocity.x, ball_velocity.y);
+
+    if ball_velocity.x.abs() <= 5.0 && ball_velocity.y.abs() <= 5.0 {
         app_state_next_state.set(AppState::DeadBall);
         println!("Entered AppState::DeadBall");
     } else {
-        if ball_velocity.x.abs() >= 0.0 {
-            ball_velocity.x -= ball_velocity.x.signum();
-        }
-        if ball_velocity.y.abs() >= 0.0 {
-            ball_velocity.y -= ball_velocity.y.signum();
+        let sum = ball_velocity.x.abs() + ball_velocity.y.abs();
+        if sum >= 0.0 {
+            ball_velocity.x -= 5.0 * ball_velocity.x.signum() * (ball_velocity.x.abs()/sum);
+            ball_velocity.y -= 5.0 * ball_velocity.y.signum() * (ball_velocity.y.abs()/sum);
         }
     }
 }

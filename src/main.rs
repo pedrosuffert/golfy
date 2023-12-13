@@ -5,8 +5,8 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision},
 };
 
-pub mod maps;
-use maps::*;
+pub mod levels;
+use levels::*;
 
 //Game Resolution
 const RESOLUTION: Vec2 = Vec2::new(1920.0, 1080.0);
@@ -190,8 +190,7 @@ fn unload_map(
     golf_hole_query: Query<Entity, With<GolfHole>>,
     wall_query: Query<Entity, With<Collider>>,
     mut app_state_next_state: ResMut<NextState<AppState>>,
-    mut levels_state_next_state: ResMut<NextState<LevelState>>,
-    mut levels_queue: Query<&mut LevelsQueue>,
+    mut level_resource: ResMut<Level>,
 ) {
     commands.entity(ball_query.single()).despawn();
     commands.entity(golf_hole_query.single()).despawn();
@@ -199,9 +198,8 @@ fn unload_map(
         commands.entity(entity).despawn();
     }
 
-    let next_level = levels_queue.single_mut().0.pop();
+    level_resource.0 += 1;
 
-    levels_state_next_state.set(next_level.unwrap());
     app_state_next_state.set(AppState::LoadingMap);
     println!("Entered AppState::LoadingMap");
 }

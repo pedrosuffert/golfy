@@ -3,6 +3,8 @@
 use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
+    sprite::MaterialMesh2dBundle,
+    transform::commands,
 };
 
 pub mod levels;
@@ -12,10 +14,10 @@ use levels::*;
 const RESOLUTION: Vec2 = Vec2::new(1920.0, 1080.0);
 
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
-const BALL_SIZE: Vec3 = Vec3::new(15.0, 15.0, 2.0);
+const BALL_SIZE: Vec3 = Vec3::new(30.0, 30.0, 0.0);
 
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
-const GOLF_HOLE_SIZE: Vec3 = Vec3::new(30.0, 30.0, 0.0);
+const GOLF_HOLE_SIZE: Vec3 = Vec3::new(45.0, 45.0, 0.0);
 
 // const SCOREBOARD_FONT_SIZE: f32 = 40.0;
 // const SCOREBOARD_TEXT_PADDING: Val = Val::Px(5.0);
@@ -23,6 +25,15 @@ const GOLF_HOLE_SIZE: Vec3 = Vec3::new(30.0, 30.0, 0.0);
 const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.533333, 0.329412);
 const BALL_COLOR: Color = Color::WHITE;
 const GOLF_HOLE_COLOR: Color = Color::BLACK;
+
+// const VELOCITY_VECTOR_QUERY: Color = Color::DARK_GRAY;
+// const VELOCITY_VECTOR_QUAD_SIZE: Vec3 = Vec3::new(4.0, 100.0, 0.0);
+// const VELOCITY_VECTOR_TRIANGLE_SIZE: Vec3 = Vec3::new(20.0, 20.0, 1.0);
+
+const SCOREBOARD_FONT_SIZE: f32 = 40.0;
+const SCOREBOARD_TEXT_PADDING: Val = Val::Px(5.0);
+const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
+const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 
 // const BRICK_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 // const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
@@ -50,10 +61,12 @@ fn main() {
         // Add our gameplay simulation systems to the fixed timestep schedule
         // which runs at 64 Hz by default
         // .add_systems(OnEnter(AppState::DeadBall), setup_swing)
+        // .add_systems(OnEnter(AppState::DeadBall), spawn_velocity_vector)
         .add_systems(
             FixedUpdate,
             (set_ball_velocity,).run_if(in_state(AppState::DeadBall)),
         )
+        // .add_systems(OnExit(AppState::DeadBall), unspawn_velocity_vector)
         .add_systems(
             FixedUpdate,
             (
@@ -66,15 +79,27 @@ fn main() {
                 .run_if(in_state(AppState::BallMoving)), // `chain`ing systems together runs them in order
         )
         .add_systems(OnEnter(AppState::UnloadingMap), unload_map)
-        .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(Update, (update_scoreboard, bevy::window::close_on_esc))
         .run();
 }
 
-#[derive(Component)]
-struct Levels(i32, Vec<fn()>);
+// This resource tracks the game's score
+#[derive(Resource)]
+struct Scoreboard {
+    score: usize,
+}
 
 #[derive(Component)]
 struct Ball;
+
+#[derive(Component)]
+struct VelocityVector;
+
+#[derive(Component)]
+struct VelocityVectorQuad;
+
+#[derive(Component)]
+struct VelocityVectorTriangle;
 
 #[derive(Component)]
 struct GolfHole;
@@ -94,18 +119,8 @@ struct Brick;
 #[derive(Resource)]
 struct CollisionSound(Handle<AudioSource>);
 
-// This resource tracks the game's score
-#[derive(Resource)]
-struct Scoreboard {
-    score: usize,
-}
-
 // Add the game's entities to our world
-fn setup(
-    mut commands: Commands,
-    mut window_query: Query<&mut Window>,
-    mut levels_query: Query<&mut Levels>,
-) {
+fn setup(mut commands: Commands, mut window_query: Query<&mut Window>) {
     //Resolution
     let mut window = window_query.single_mut();
     window.resolution.set(RESOLUTION.x, RESOLUTION.y);
@@ -113,6 +128,30 @@ fn setup(
     // Camera
     commands.spawn(Camera2dBundle::default());
 
+    // Scoreboard
+    commands.spawn(
+        TextBundle::from_sections([
+            TextSection::new(
+                "Swings: ",
+                TextStyle {
+                    font_size: SCOREBOARD_FONT_SIZE,
+                    color: TEXT_COLOR,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font_size: SCOREBOARD_FONT_SIZE,
+                color: SCORE_COLOR,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: SCOREBOARD_TEXT_PADDING,
+            left: SCOREBOARD_TEXT_PADDING,
+            ..default()
+        }),
+    );
 }
 
 fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>) {
@@ -122,29 +161,50 @@ fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>
     }
 }
 
-// fn setup_swing(
+// fn spawn_velocity_vector(
 //     mut commands: Commands,
 //     mut meshes: ResMut<Assets<Mesh>>,
 //     mut materials: ResMut<Assets<ColorMaterial>>,
-//     asset_server: Res<AssetServer>,
 // ) {
 //     commands.spawn((
 //         MaterialMesh2dBundle {
-//             mesh: meshes.add(shape::Circle::default().into()).into(),
-//             material: materials.add(ColorMaterial::from(GOLF_HOLE_COLOR)),
-//             transform: Transform::from_translation(GOLF_HOLE_STARTING_POSITION)
-//                 .with_scale(GOLF_HOLE_SIZE),
+//             mesh: meshes.add(shape::Quad::default().into()).into(),
+//             material: materials.add(ColorMaterial::from(VELOCITY_VECTOR_QUERY)),
+//             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0))
+//                 .with_scale(VELOCITY_VECTOR_QUAD_SIZE)
+//                 .with_rotation(Quat::from_array([0.0, 0.0, 0.0, 0.0])),
 //             ..default()
 //         },
-//         GolfHole,
+//         VelocityVectorQuad,
+//         VelocityVector,
+//     ));
+
+//     commands.spawn((
+//         MaterialMesh2dBundle {
+//             mesh: meshes.add(shape::RegularPolygon::new(0.5, 3).into()).into(),
+//             material: materials.add(ColorMaterial::from(VELOCITY_VECTOR_QUERY)),
+//             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0))
+//                 .with_scale(VELOCITY_VECTOR_TRIANGLE_SIZE),
+//             ..default()
+//         },
+//         VelocityVectorTriangle,
+//         VelocityVector
 //     ));
 // }
+
+fn update_scoreboard(scoreboard: Res<Scoreboard>, mut query: Query<&mut Text>) {
+    let mut text = query.single_mut();
+    text.sections[1].value = scoreboard.score.to_string();
+}
 
 fn set_ball_velocity(
     mouse_input: Res<Input<MouseButton>>,
     mut ball_query: Query<(&mut Velocity, &Transform), With<Ball>>,
     mut app_state_next_state: ResMut<NextState<AppState>>,
     mut window_query: Query<&mut Window>,
+    mut vector_quad_query: Query<&mut Transform, (With<VelocityVectorQuad>, Without<Ball>)>,
+    mut scoreboard: ResMut<Scoreboard>,
+    // mut vector_triangle_query: Query<&mut Transform, With<VelocityVectorTriangle>>,
 ) {
     let (mut ball_velocity, ball_transform) = ball_query.single_mut();
     let cursor_position = window_query
@@ -153,21 +213,54 @@ fn set_ball_velocity(
         .unwrap_or(Vec2::new(0.0, 0.0));
 
     let ball_position = ball_transform.translation;
-    let ball_velocity_vector = Vec2::new(
+    let mut ball_velocity_vector = Vec2::new(
         cursor_position.x - (ball_position.x + window_query.single_mut().width() / 2.0),
         -cursor_position.y + (window_query.single_mut().height() / 2.0 - ball_position.y),
     );
 
-    // println!("{} {} {} {}", cursor_position.x, ball_position.x + RESOLUTION.x/2.0, cursor_position.y, ball_position.y + RESOLUTION.y/2.0);
+    // let mut vector_quad = vector_quad_query.single_mut();
+    // let mut vector_triangle = vector_triangle_query.single_mut();
 
-    // println!("{} {}", ball_velocity_vector.x, ball_velocity_vector.y);
+    // vector_quad.translation.x = ball_velocity_vector.x / 2.0 + ball_position.x;
+
+    // vector_quad.translation.y = ball_velocity_vector.y / 2.0 + ball_position.y;
+
+    // vector_quad.look_at(Vec3::new(ball_velocity_vector.x, ball_velocity_vector.y, 0.0), Vec3::Y);
+
+    // vector_quad.scale.y = ball_velocity_vector.length();
+
+    // println!("{} {}", (ball_velocity_vector.y / ball_velocity_vector.x).atan(), vector_quad.rotation.to_axis_angle().1);
+
+    // let angle = (ball_velocity_vector.y / ball_velocity_vector.x).atan()
+    //     - vector_quad.rotation.to_axis_angle().1;
+
+    // vector_quad.rotate_z(30.0);
+
+    // println!("{}", angle);
+
+    if ball_velocity_vector.x > 700. {
+        ball_velocity_vector.x = 700.;
+    }
+    if ball_velocity_vector.y > 700. {
+        ball_velocity_vector.y = 700.;
+    }
 
     if mouse_input.pressed(MouseButton::Left) {
+        scoreboard.score += 1;
         *ball_velocity = Velocity(ball_velocity_vector);
         app_state_next_state.set(AppState::BallMoving);
         println!("Entered AppState::BallMoving");
     }
 }
+
+// fn unspawn_velocity_vector(
+//     mut commands: Commands,
+//     vector_query: Query<Entity, With<VelocityVector>>,
+// ) {
+//     for entity in vector_query.iter() {
+//         commands.entity(entity).despawn();
+//     }
+// }
 
 fn check_ball_inside_hole(
     ball_query: Query<&Transform, With<Ball>>,

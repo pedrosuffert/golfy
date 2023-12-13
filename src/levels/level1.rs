@@ -14,16 +14,17 @@ use crate::GOLF_HOLE_SIZE;
 use crate::BALL_COLOR;
 use crate::BALL_SIZE;
 
-const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(0.0, 0.0, 0.0);
+const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(650.0, 300.0, 0.0);
 const BALL_SPEED: f32 = 500.0;
-const BALL_STARTING_POSITION: Vec3 = Vec3::new(0.0, -100.0, 1.0);
+const BALL_STARTING_POSITION: Vec3 = Vec3::new(-670.0, -330.0, 1.0);
 const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);const WALL_THICKNESS: f32 = 10.0;
 // x coordinates
-const LEFT_WALL: f32 = -450.;
-const RIGHT_WALL: f32 = 450.;
+const LEFT_WALL: f32 = -700.;
+const RIGHT_WALL: f32 = 700.;
 // y coordinates
-const BOTTOM_WALL: f32 = -300.;
-const TOP_WALL: f32 = 300.;
+const BOTTOM_WALL: f32 = -350.;
+const TOP_WALL: f32 = 350.;
+const MIDDLE_WALL: f32 = 0.;
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 
 
@@ -36,56 +37,21 @@ struct WallBundle {
     collider: Collider,
 }
 
-/// Which side of the arena is this wall located on?
-enum WallLocation {
-    Left,
-    Right,
-    Bottom,
-    Top,
-}
-
-impl WallLocation {
-    fn position(&self) -> Vec2 {
-        match self {
-            WallLocation::Left => Vec2::new(LEFT_WALL, 0.),
-            WallLocation::Right => Vec2::new(RIGHT_WALL, 0.),
-            WallLocation::Bottom => Vec2::new(0., BOTTOM_WALL),
-            WallLocation::Top => Vec2::new(0., TOP_WALL),
-        }
-    }
-
-    fn size(&self) -> Vec2 {
-        let arena_height = TOP_WALL - BOTTOM_WALL;
-        let arena_width = RIGHT_WALL - LEFT_WALL;
-        // Make sure we haven't messed up our constants
-        assert!(arena_height > 0.0);
-        assert!(arena_width > 0.0);
-
-        match self {
-            WallLocation::Left | WallLocation::Right => {
-                Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)
-            }
-            WallLocation::Bottom | WallLocation::Top => {
-                Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)
-            }
-        }
-    }
-}
 
 impl WallBundle {
     // This "builder method" allows us to reuse logic across our wall entities,
     // making our code easier to read and less prone to bugs when we change the logic
-    fn new(location: WallLocation) -> WallBundle {
+    fn new(translation: Vec2, scale: Vec2) -> WallBundle {
         WallBundle {
             sprite_bundle: SpriteBundle {
                 transform: Transform {
                     // We need to convert our Vec2 into a Vec3, by giving it a z-coordinate
                     // This is used to determine the order of our sprites
-                    translation: location.position().extend(0.0),
+                    translation: translation.extend(0.0),
                     // The z-scale of 2D objects must always be 1.0,
                     // or their ordering will be affected in surprising ways.
                     // See https://github.com/bevyengine/bevy/issues/4149
-                    scale: location.size().extend(1.0),
+                    scale: scale.extend(1.0),
                     ..default()
                 },
                 sprite: Sprite {
@@ -129,36 +95,15 @@ pub fn load_level_1(
         Velocity(INITIAL_BALL_DIRECTION.normalize() * BALL_SPEED),
     ));
 
-    // // Scoreboard
-    // commands.spawn(
-    //     TextBundle::from_sections([
-    //         TextSection::new(
-    //             "Score: ",
-    //             TextStyle {
-    //                 font_size: SCOREBOARD_FONT_SIZE,
-    //                 color: TEXT_COLOR,
-    //                 ..default()
-    //             },
-    //         ),
-    //         TextSection::from_style(TextStyle {
-    //             font_size: SCOREBOARD_FONT_SIZE,
-    //             color: SCORE_COLOR,
-    //             ..default()
-    //         }),
-    //     ])
-    //     .with_style(Style {
-    //         position_type: PositionType::Absolute,
-    //         top: SCOREBOARD_TEXT_PADDING,
-    //         left: SCOREBOARD_TEXT_PADDING,
-    //         ..default()
-    //     }),
-    // );
+    let arena_height = TOP_WALL - BOTTOM_WALL;
+    let arena_width = RIGHT_WALL - LEFT_WALL;
 
     // Walls
-    commands.spawn(WallBundle::new(WallLocation::Left));
-    commands.spawn(WallBundle::new(WallLocation::Right));
-    commands.spawn(WallBundle::new(WallLocation::Bottom));
-    commands.spawn(WallBundle::new(WallLocation::Top));
+    commands.spawn(WallBundle::new(Vec2::new(LEFT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(RIGHT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(0., MIDDLE_WALL), Vec2::new(arena_width + WALL_THICKNESS - 300., WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(0., BOTTOM_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(0., TOP_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
 
     app_state_next_state.set(AppState::DeadBall);
     println!("Entered AppState::DeadBall");

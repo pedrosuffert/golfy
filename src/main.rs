@@ -10,6 +10,9 @@ use bevy::{
 pub mod levels;
 use levels::*;
 
+mod ui;
+use ui::GameUIPlugin;
+
 //Game Resolution
 const RESOLUTION: Vec2 = Vec2::new(1920.0, 1080.0);
 
@@ -43,10 +46,13 @@ const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 pub enum AppState {
     #[default]
+    QualquerCoisaRenan,
+    MainMenu,
     LoadingMap,
     DeadBall,
     BallMoving,
     UnloadingMap,
+    GameOver,
 }
 
 fn main() {
@@ -58,6 +64,7 @@ fn main() {
         .add_systems(Startup, setup)
         .add_plugins(LevelsPlugins)
         .add_state::<AppState>()
+        //.add_plugins(GameUIPlugin)
         // Add our gameplay simulation systems to the fixed timestep schedule
         // which runs at 64 Hz by default
         // .add_systems(OnEnter(AppState::DeadBall), setup_swing)

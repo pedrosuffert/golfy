@@ -55,6 +55,8 @@ fn main() {
         .add_plugins(LevelsPlugins)
         .add_state::<AppState>()
         .add_plugins(GameUIPlugin)
+        .add_systems(Update, transition_to_main_menu_state)
+        .add_systems(Update,transition_to_game_over_menu_state)
         // Add our gameplay simulation systems to the fixed timestep schedule
         // which runs at 64 Hz by default
         // .add_systems(OnEnter(AppState::DeadBall), setup_swing)
@@ -112,6 +114,11 @@ struct Brick;
 
 #[derive(Resource)]
 struct CollisionSound(Handle<AudioSource>);
+
+#[derive(Event)]
+pub struct GameOver {
+    pub score: u32,
+}
 
 // Add the game's entities to our world
 fn setup(mut commands: Commands, mut window_query: Query<&mut Window>) {
@@ -327,6 +334,32 @@ fn uptade_ball_velocity(
         if sum >= 0.0 {
             ball_velocity.x -= 5.0 * ball_velocity.x.signum() * (ball_velocity.x.abs() / sum);
             ball_velocity.y -= 5.0 * ball_velocity.y.signum() * (ball_velocity.y.abs() / sum);
+        }
+    }
+}
+
+pub fn transition_to_main_menu_state(
+    keyboard_input: Res<Input<KeyCode>>,
+    app_state: Res<State<AppState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::M) {
+        if app_state.get() != &AppState::MainMenu {
+            next_app_state.set(AppState::MainMenu);
+            println!("Entered AppState::MainMenu");
+        }
+    }
+}
+
+pub fn transition_to_game_over_menu_state(
+    keyboard_input: Res<Input<KeyCode>>,
+    app_state: Res<State<AppState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::G) {
+        if app_state.get() != &AppState::GameOver {
+            next_app_state.set(AppState::GameOver);
+            println!("Entered AppState::GameOverMenu");
         }
     }
 }

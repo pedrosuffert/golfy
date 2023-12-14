@@ -27,21 +27,12 @@ const BALL_SIZE: Vec3 = Vec3::new(20.0, 20.0, 0.0);
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
 const GOLF_HOLE_SIZE: Vec3 = Vec3::new(45.0, 45.0, 0.0);
 
-// const SCOREBOARD_FONT_SIZE: f32 = 40.0;
-// const SCOREBOARD_TEXT_PADDING: Val = Val::Px(5.0);
-
-const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.533333, 0.329412);
 const BALL_COLOR: Color = Color::WHITE;
 const GOLF_HOLE_COLOR: Color = Color::BLACK;
 
 const VELOCITY_VECTOR_QUERY: Color = Color::DARK_GRAY;
 const VELOCITY_VECTOR_QUAD_SIZE: Vec3 = Vec3::new(4.0, 100.0, 0.0);
 const VELOCITY_VECTOR_TRIANGLE_SIZE: Vec3 = Vec3::new(25.0, 25.0, 0.0);
-
-// const BRICK_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
-// const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
-// const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
-// const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 pub enum AppState {
@@ -200,12 +191,6 @@ fn set_ball_velocity(
         -cursor_position.y + (window_query.single_mut().height() / 2.0 - ball_position.y),
     );
 
-    // let mut vector_triangle = vector_triangle_query.single_mut();
-
-    // vector_quad.look_at(Vec3::new(ball_velocity_vector.x, ball_velocity_vector.y, 0.0), Vec3::Y);
-
-    // println!("{} {}", ball_velocity_vector.y , ball_velocity_vector.x);
-
     // Rotate vector arrow
     let mut vector_quad = vector_quad_query.single_mut();
     vector_quad.translation.x = ball_velocity_vector.x / 2.0 + ball_position.x;
@@ -237,7 +222,7 @@ fn set_ball_velocity(
         scoreboard.score += 1;
         *ball_velocity = Velocity(ball_velocity_vector);
         app_state_next_state.set(AppState::BallMoving);
-        println!("Entered AppState::BallMoving");
+
     }
 }
 
@@ -261,7 +246,7 @@ fn check_ball_inside_hole(
 
     if distance <= GOLF_HOLE_SIZE.length() / 2.0 {
         app_state_next_state.set(AppState::UnloadingMap);
-        println!("Entered AppState::BallInHole");
+
     }
 }
 
@@ -282,7 +267,7 @@ fn unload_map(
     level_resource.0 += 1;
 
     app_state_next_state.set(AppState::LoadingMap);
-    println!("Entered AppState::LoadingMap");
+
 }
 
 fn uptade_ball_velocity(
@@ -332,11 +317,11 @@ fn uptade_ball_velocity(
         }
     }
 
-    // println!("{} {}", ball_velocity.x, ball_velocity.y);
+
 
     if ball_velocity.x.abs() <= 5.0 && ball_velocity.y.abs() <= 5.0 {
         app_state_next_state.set(AppState::DeadBall);
-        println!("Entered AppState::DeadBall");
+
     } else {
         let sum = ball_velocity.x.abs() + ball_velocity.y.abs();
         if sum >= 0.0 {
@@ -345,20 +330,3 @@ fn uptade_ball_velocity(
         }
     }
 }
-
-// fn play_collision_sound(
-//     mut commands: Commands,
-//     mut collision_events: EventReader<CollisionEvent>,
-//     sound: Res<CollisionSound>,
-// ) {
-//     // Play a sound once per frame if a collision occurred.
-//     if !collision_events.is_empty() {
-//         // This prevents events staying active on the next frame.
-//         collision_events.clear();
-//         commands.spawn(AudioBundle {
-//             source: sound.0.clone(),
-//             // auto-despawn the entity when playback finishes
-//             settings: PlaybackSettings::DESPAWN,
-//         });
-//     }
-// }

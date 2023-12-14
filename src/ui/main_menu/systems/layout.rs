@@ -3,17 +3,27 @@ use bevy::prelude::*;
 use crate::ui::main_menu::components::*;
 use crate::ui::main_menu::styles::*;
 
+const GOLF_COURSE_COLOR: Color = Color::rgb(0.0, 0.533333, 0.329412);
+
 pub fn spawn_main_menu(
     mut commands: Commands,
-    asset_server: Res<AssetServer>
+    asset_server: Res<AssetServer>,
+    mut backgroung_color: ResMut<ClearColor>,
+    mut window_query: Query<&mut Window>
 ) {
+    backgroung_color.0 = Color::rgb_u8(43, 44, 47);
+    window_query.single_mut().cursor.visible = true;
     let main_menu_entity = build_main_menu(&mut commands, &asset_server);
 }
 
 pub fn despawn_main_menu(
     mut commands: Commands,
     main_menu_query: Query<Entity, With<MainMenu>>,
+    mut backgroung_color: ResMut<ClearColor>,
+    mut window_query: Query<&mut Window>
 ) {
+    backgroung_color.0 = GOLF_COURSE_COLOR;
+    window_query.single_mut().cursor.visible = false;
     if let Ok(main_menu_entity) = main_menu_query.get_single() {
         commands.entity(main_menu_entity).despawn_recursive();
     }

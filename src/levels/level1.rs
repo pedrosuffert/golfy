@@ -16,8 +16,8 @@ use crate::BALL_SIZE;
 
 const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(650.0, 300.0, 0.0);
 const BALL_SPEED: f32 = 500.0;
-const BALL_STARTING_POSITION: Vec3 = Vec3::new(-670.0, -330.0, 1.0);
-const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);const WALL_THICKNESS: f32 = 10.0;
+const BALL_STARTING_POSITION: Vec3 = Vec3::new(-670.0, -330.0, 2.0);
+const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);const WALL_THICKNESS: f32 = 30.0;
 // x coordinates
 const LEFT_WALL: f32 = -700.;
 const RIGHT_WALL: f32 = 700.;

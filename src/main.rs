@@ -7,17 +7,22 @@ use bevy::{
     transform::commands,
 };
 
-pub mod levels;
-use levels::*;
+mod levels;
+use crate::levels::*;
 
 mod ui;
-use ui::GameUIPlugin;
+use crate::ui::GameUIPlugin;
+
+mod swings_count;
+use crate::swings_count::*;
+
+use std::f32::consts::PI;
 
 //Game Resolution
 const RESOLUTION: Vec2 = Vec2::new(1920.0, 1080.0);
 
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
-const BALL_SIZE: Vec3 = Vec3::new(30.0, 30.0, 0.0);
+const BALL_SIZE: Vec3 = Vec3::new(20.0, 20.0, 0.0);
 
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
 const GOLF_HOLE_SIZE: Vec3 = Vec3::new(45.0, 45.0, 0.0);
@@ -29,14 +34,9 @@ const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.533333, 0.329412);
 const BALL_COLOR: Color = Color::WHITE;
 const GOLF_HOLE_COLOR: Color = Color::BLACK;
 
-// const VELOCITY_VECTOR_QUERY: Color = Color::DARK_GRAY;
-// const VELOCITY_VECTOR_QUAD_SIZE: Vec3 = Vec3::new(4.0, 100.0, 0.0);
-// const VELOCITY_VECTOR_TRIANGLE_SIZE: Vec3 = Vec3::new(20.0, 20.0, 1.0);
-
-const SCOREBOARD_FONT_SIZE: f32 = 40.0;
-const SCOREBOARD_TEXT_PADDING: Val = Val::Px(5.0);
-const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
-const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
+const VELOCITY_VECTOR_QUERY: Color = Color::DARK_GRAY;
+const VELOCITY_VECTOR_QUAD_SIZE: Vec3 = Vec3::new(4.0, 100.0, 0.0);
+const VELOCITY_VECTOR_TRIANGLE_SIZE: Vec3 = Vec3::new(25.0, 25.0, 0.0);
 
 // const BRICK_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 // const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
@@ -46,7 +46,6 @@ const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 pub enum AppState {
     #[default]
-    QualquerCoisaRenan,
     MainMenu,
     LoadingMap,
     DeadBall,
@@ -58,22 +57,22 @@ pub enum AppState {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(Scoreboard { score: 0 })
-        .insert_resource(ClearColor(BACKGROUND_COLOR))
+        .insert_resource(ClearColor::default())
         .add_event::<CollisionEvent>()
+        .add_plugins(SwingsPlugins)
         .add_systems(Startup, setup)
         .add_plugins(LevelsPlugins)
         .add_state::<AppState>()
-        //.add_plugins(GameUIPlugin)
+        .add_plugins(GameUIPlugin)
         // Add our gameplay simulation systems to the fixed timestep schedule
         // which runs at 64 Hz by default
         // .add_systems(OnEnter(AppState::DeadBall), setup_swing)
-        // .add_systems(OnEnter(AppState::DeadBall), spawn_velocity_vector)
+        .add_systems(OnEnter(AppState::DeadBall), spawn_velocity_vector)
         .add_systems(
             FixedUpdate,
-            (set_ball_velocity,).run_if(in_state(AppState::DeadBall)),
+            (set_ball_velocity,update_scoreboard).run_if(in_state(AppState::DeadBall)).chain(),
         )
-        // .add_systems(OnExit(AppState::DeadBall), unspawn_velocity_vector)
+        .add_systems(OnExit(AppState::DeadBall), unspawn_velocity_vector)
         .add_systems(
             FixedUpdate,
             (
@@ -86,15 +85,12 @@ fn main() {
                 .run_if(in_state(AppState::BallMoving)), // `chain`ing systems together runs them in order
         )
         .add_systems(OnEnter(AppState::UnloadingMap), unload_map)
-        .add_systems(Update, (update_scoreboard, bevy::window::close_on_esc))
+        .add_systems(Update, bevy::window::close_on_esc)
         .run();
 }
 
-// This resource tracks the game's score
 #[derive(Resource)]
-struct Scoreboard {
-    score: usize,
-}
+struct BackgroundColor(Color);
 
 #[derive(Component)]
 struct Ball;
@@ -134,31 +130,6 @@ fn setup(mut commands: Commands, mut window_query: Query<&mut Window>) {
 
     // Camera
     commands.spawn(Camera2dBundle::default());
-
-    // Scoreboard
-    commands.spawn(
-        TextBundle::from_sections([
-            TextSection::new(
-                "Swings: ",
-                TextStyle {
-                    font_size: SCOREBOARD_FONT_SIZE,
-                    color: TEXT_COLOR,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font_size: SCOREBOARD_FONT_SIZE,
-                color: SCORE_COLOR,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: SCOREBOARD_TEXT_PADDING,
-            left: SCOREBOARD_TEXT_PADDING,
-            ..default()
-        }),
-    );
 }
 
 fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>) {
@@ -168,36 +139,36 @@ fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>
     }
 }
 
-// fn spawn_velocity_vector(
-//     mut commands: Commands,
-//     mut meshes: ResMut<Assets<Mesh>>,
-//     mut materials: ResMut<Assets<ColorMaterial>>,
-// ) {
-//     commands.spawn((
-//         MaterialMesh2dBundle {
-//             mesh: meshes.add(shape::Quad::default().into()).into(),
-//             material: materials.add(ColorMaterial::from(VELOCITY_VECTOR_QUERY)),
-//             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0))
-//                 .with_scale(VELOCITY_VECTOR_QUAD_SIZE)
-//                 .with_rotation(Quat::from_array([0.0, 0.0, 0.0, 0.0])),
-//             ..default()
-//         },
-//         VelocityVectorQuad,
-//         VelocityVector,
-//     ));
+fn spawn_velocity_vector(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes.add(shape::Quad::default().into()).into(),
+            material: materials.add(ColorMaterial::from(VELOCITY_VECTOR_QUERY)),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0))
+                .with_scale(VELOCITY_VECTOR_QUAD_SIZE)
+                .with_rotation(Quat::from_array([0.0, 0.0, 0.0, 0.0])),
+            ..default()
+        },
+        VelocityVectorQuad,
+        VelocityVector,
+    ));
 
-//     commands.spawn((
-//         MaterialMesh2dBundle {
-//             mesh: meshes.add(shape::RegularPolygon::new(0.5, 3).into()).into(),
-//             material: materials.add(ColorMaterial::from(VELOCITY_VECTOR_QUERY)),
-//             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0))
-//                 .with_scale(VELOCITY_VECTOR_TRIANGLE_SIZE),
-//             ..default()
-//         },
-//         VelocityVectorTriangle,
-//         VelocityVector
-//     ));
-// }
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes.add(shape::RegularPolygon::new(0.5, 3).into()).into(),
+            material: materials.add(ColorMaterial::from(VELOCITY_VECTOR_QUERY)),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0))
+                .with_scale(VELOCITY_VECTOR_TRIANGLE_SIZE),
+            ..default()
+        },
+        VelocityVectorTriangle,
+        VelocityVector
+    ));
+}
 
 fn update_scoreboard(scoreboard: Res<Scoreboard>, mut query: Query<&mut Text>) {
     let mut text = query.single_mut();
@@ -206,13 +177,16 @@ fn update_scoreboard(scoreboard: Res<Scoreboard>, mut query: Query<&mut Text>) {
 
 fn set_ball_velocity(
     mouse_input: Res<Input<MouseButton>>,
-    mut ball_query: Query<(&mut Velocity, &Transform), With<Ball>>,
+    mut ball_query: Query<(&mut Velocity, & Transform), With<Ball>>,
     mut app_state_next_state: ResMut<NextState<AppState>>,
     mut window_query: Query<&mut Window>,
-    mut vector_quad_query: Query<&mut Transform, (With<VelocityVectorQuad>, Without<Ball>)>,
+    mut vector_quad_query: Query<&mut Transform, (With<VelocityVectorQuad>, Without<Ball>, Without<VelocityVectorTriangle>)>,
+    mut vector_triangle_query: Query<&mut Transform, (With<VelocityVectorTriangle>, Without<Ball>, Without<VelocityVectorQuad>)>,
     mut scoreboard: ResMut<Scoreboard>,
-    // mut vector_triangle_query: Query<&mut Transform, With<VelocityVectorTriangle>>,
 ) {
+
+
+    // Calculate ball velocity vector
     let (mut ball_velocity, ball_transform) = ball_query.single_mut();
     let cursor_position = window_query
         .single_mut()
@@ -220,36 +194,43 @@ fn set_ball_velocity(
         .unwrap_or(Vec2::new(0.0, 0.0));
 
     let ball_position = ball_transform.translation;
+
     let mut ball_velocity_vector = Vec2::new(
         cursor_position.x - (ball_position.x + window_query.single_mut().width() / 2.0),
         -cursor_position.y + (window_query.single_mut().height() / 2.0 - ball_position.y),
     );
 
-    // let mut vector_quad = vector_quad_query.single_mut();
     // let mut vector_triangle = vector_triangle_query.single_mut();
-
-    // vector_quad.translation.x = ball_velocity_vector.x / 2.0 + ball_position.x;
-
-    // vector_quad.translation.y = ball_velocity_vector.y / 2.0 + ball_position.y;
 
     // vector_quad.look_at(Vec3::new(ball_velocity_vector.x, ball_velocity_vector.y, 0.0), Vec3::Y);
 
-    // vector_quad.scale.y = ball_velocity_vector.length();
+    // println!("{} {}", ball_velocity_vector.y , ball_velocity_vector.x);
 
-    // println!("{} {}", (ball_velocity_vector.y / ball_velocity_vector.x).atan(), vector_quad.rotation.to_axis_angle().1);
+    // Rotate vector arrow
+    let mut vector_quad = vector_quad_query.single_mut();
+    vector_quad.translation.x = ball_velocity_vector.x / 2.0 + ball_position.x;
+    vector_quad.translation.y = ball_velocity_vector.y / 2.0 + ball_position.y;
+    vector_quad.scale.y = ball_velocity_vector.length();
 
-    // let angle = (ball_velocity_vector.y / ball_velocity_vector.x).atan()
-    //     - vector_quad.rotation.to_axis_angle().1;
+    let mut vector_triangle = vector_triangle_query.single_mut();
+    vector_triangle.translation.x = ball_velocity_vector.x + ball_position.x;
+    vector_triangle.translation.y = ball_velocity_vector.y + ball_position.y;
 
-    // vector_quad.rotate_z(30.0);
 
-    // println!("{}", angle);
-
-    if ball_velocity_vector.x > 700. {
-        ball_velocity_vector.x = 700.;
+    let vector_orient = PI/2.0;
+    let mut angle_to_target = ball_velocity_vector.y.atan2(ball_velocity_vector.x);
+    if angle_to_target < 0. {
+        angle_to_target += 2.0*PI;
     }
-    if ball_velocity_vector.y > 700. {
-        ball_velocity_vector.y = 700.;
+    let angle_to_rotate = angle_to_target - vector_orient;
+    vector_quad.rotation = Quat::from_rotation_z(angle_to_rotate);
+    vector_triangle.rotation = Quat::from_rotation_z(angle_to_rotate);
+
+    if ball_velocity_vector.x.abs() > 700. {
+        ball_velocity_vector.x = ball_velocity_vector.x.signum() * 700.;
+    }
+    if ball_velocity_vector.y.abs() > 700. {
+        ball_velocity_vector.y = ball_velocity_vector.y.signum() * 700.;
     }
 
     if mouse_input.pressed(MouseButton::Left) {
@@ -260,14 +241,14 @@ fn set_ball_velocity(
     }
 }
 
-// fn unspawn_velocity_vector(
-//     mut commands: Commands,
-//     vector_query: Query<Entity, With<VelocityVector>>,
-// ) {
-//     for entity in vector_query.iter() {
-//         commands.entity(entity).despawn();
-//     }
-// }
+fn unspawn_velocity_vector(
+    mut commands: Commands,
+    vector_query: Query<Entity, With<VelocityVector>>,
+) {
+    for entity in vector_query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
 
 fn check_ball_inside_hole(
     ball_query: Query<&Transform, With<Ball>>,

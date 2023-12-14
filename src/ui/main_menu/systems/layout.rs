@@ -47,15 +47,23 @@ pub fn build_main_menu(
                 }
             );
             // Text
+//            parent.spawn(
+//                TextBundle {
+//                    text: Text {
+//                        sections: vec![
+//                            TextSection::new("Golfy", get_title_text_style(&asset_server),)
+//                        ],
+//                        alignment: TextAlignment::Center,
+//                        ..default()
+//                    },
+//                    ..default()
+//                }
+//            );
+
             parent.spawn(
-                TextBundle {
-                    text: Text {
-                        sections: vec![
-                            TextSection::new("Golfy", get_title_text_style(&asset_server),)
-                        ],
-                        alignment: TextAlignment::Center,
-                        ..default()
-                    },
+                ImageBundle {
+                    style: TITLE_IMAGE_STYLE,
+                    image: asset_server.load("sprites/golfy-01.png").into(),
                     ..default()
                 }
             );

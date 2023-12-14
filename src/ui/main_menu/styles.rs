@@ -26,8 +26,16 @@ pub const TITLE_STYLE: Style = {
     style.flex_direction = FlexDirection::Row;
     style.justify_content = JustifyContent::Center;
     style.align_items = AlignItems::Center;
-    style.width = Val::Px(300.0);
-    style.height = Val::Px(120.0);
+    style.width = Val::Px(600.0);
+    style.height = Val::Px(240.0);
+    style
+};
+
+pub const TITLE_IMAGE_STYLE: Style = {
+    let mut style = Style::DEFAULT;
+    style.width = Val::Px(256.0);
+    style.height = Val::Px(256.0);
+    style.margin = UiRect::new(Val::Px(8.0),Val::Px(8.0),Val::Px(8.0),Val::Px(8.0),);
     style
 };
 

@@ -36,7 +36,7 @@ const BACKGROUND_COLOR: Color = Color::rgb(0.0, 0.533333, 0.329412);
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ClearColor::default())
+        app.insert_resource(ClearColor(Color::rgb_u8(43, 44, 47)))
             .add_event::<CollisionEvent>()
             .add_plugins(SwingsPlugins)
             .add_state::<GameState>()

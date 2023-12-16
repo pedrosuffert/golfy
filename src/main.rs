@@ -20,10 +20,10 @@ use std::f32::consts::PI;
 const RESOLUTION: Vec2 = Vec2::new(1920.0, 1080.0);
 
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
-const BALL_SIZE: Vec3 = Vec3::new(20.0, 20.0, 0.0);
+const BALL_SIZE: Vec3 = Vec3::new(10.0, 10.0, 0.0);
 
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
-const GOLF_HOLE_SIZE: Vec3 = Vec3::new(45.0, 45.0, 0.0);
+const GOLF_HOLE_SIZE: Vec3 = Vec3::new(25.0, 25.0, 0.0);
 
 const BALL_COLOR: Color = Color::WHITE;
 const GOLF_HOLE_COLOR: Color = Color::BLACK;

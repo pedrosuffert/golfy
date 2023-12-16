@@ -14,16 +14,16 @@ use crate::GOLF_HOLE_SIZE;
 use crate::BALL_COLOR;
 use crate::BALL_SIZE;
 
-const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(650.0, 300.0, 0.0);
+const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(350.0, 100.0, 0.0);
 const BALL_SPEED: f32 = 500.0;
-const BALL_STARTING_POSITION: Vec3 = Vec3::new(-670.0, -330.0, 2.0);
+const BALL_STARTING_POSITION: Vec3 = Vec3::new(-370.0, -100.0, 2.0);
 const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);const WALL_THICKNESS: f32 = 30.0;
 // x coordinates
-const LEFT_WALL: f32 = -700.;
-const RIGHT_WALL: f32 = 700.;
+const LEFT_WALL: f32 = -400.;
+const RIGHT_WALL: f32 = 400.;
 // y coordinates
-const BOTTOM_WALL: f32 = -350.;
-const TOP_WALL: f32 = 350.;
+const BOTTOM_WALL: f32 = -150.;
+const TOP_WALL: f32 = 150.;
 const MIDDLE_WALL: f32 = 0.;
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 

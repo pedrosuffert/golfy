@@ -4,6 +4,8 @@ mod level1;
 use level1::*;
 mod level2;
 use level2::*;
+mod level3;
+use level3::*;
 
 use crate::AppState;
 
@@ -23,8 +25,9 @@ impl Plugin for LevelsPlugins {
             .add_systems(
                 OnEnter(AppState::LoadingMap),
                 (
-                    load_level_1.run_if(resource_equals(Level(1))),
+                    load_level_1.run_if(resource_equals(Level(3))),
                     load_level_2.run_if(resource_equals(Level(2))),
+                    load_level_3.run_if(resource_equals(Level(1)))
                 ),
             );
     }

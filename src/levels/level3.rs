@@ -14,19 +14,14 @@ use crate::GOLF_HOLE_SIZE;
 use crate::BALL_COLOR;
 use crate::BALL_SIZE;
 
-const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(350.0, 100.0, 0.0);
+const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(0.0, 0.0, 0.0);
 const BALL_SPEED: f32 = 500.0;
-const BALL_STARTING_POSITION: Vec3 = Vec3::new(-370.0, -100.0, 2.0);
-const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);const WALL_THICKNESS: f32 = 30.0;
-// x coordinates
-const LEFT_WALL: f32 = -400.;
-const RIGHT_WALL: f32 = 400.;
-// y coordinates
-const BOTTOM_WALL: f32 = -150.;
-const TOP_WALL: f32 = 150.;
-const MIDDLE_WALL: f32 = 0.;
+const BALL_STARTING_POSITION: Vec3 = Vec3::new(0.0, -250.0, 2.0);
+const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);
+const WALL_THICKNESS: f32 = 30.0;
+const WALL_THICKNESS_H: f32 = 15.0;
+const WALL_THICKNESS_D: f32 = 60.0;
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
-
 
 // This bundle is a collection of the components that define a "wall" in our game
 #[derive(Bundle)]
@@ -65,7 +60,7 @@ impl WallBundle {
     }
 }
 
-pub fn load_level_1(
+pub fn load_level_3(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -84,6 +79,7 @@ pub fn load_level_1(
     ));
 
     // Ball
+
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes.add(shape::Circle::default().into()).into(),
@@ -95,15 +91,24 @@ pub fn load_level_1(
         Velocity(INITIAL_BALL_DIRECTION.normalize() * BALL_SPEED),
     ));
 
-    let arena_height = TOP_WALL - BOTTOM_WALL;
-    let arena_width = RIGHT_WALL - LEFT_WALL;
+    //let arena_height = TOP_WALL_Y - BOTTOM_WALL_Y;
+    //let arena_width = RIGHT_WALL_X - LEFT_WALL_X;
+    //let mut walls: Vec<[[f32; 2]; 2]> 
+
+    let mut walls = vec![[[0.,-300.],[900.,WALL_THICKNESS]],[[0.,300.],[900.,WALL_THICKNESS]],
+                                             [[0.,-200.],[700.,WALL_THICKNESS]],[[0.,200.],[700.,WALL_THICKNESS]],
+                                             [[0.,-100.],[500.,WALL_THICKNESS]],[[0.,100.],[500.,WALL_THICKNESS]],
+                                             [[0.,-35.],[300.,WALL_THICKNESS_H]],[[0.,35.],[300.,WALL_THICKNESS_H]],
+                                             [[-450.,0.],[WALL_THICKNESS, 600. + WALL_THICKNESS]],
+                                             [[450.,0.],[WALL_THICKNESS,600. + WALL_THICKNESS]]];
 
     // Walls
-    commands.spawn(WallBundle::new(Vec2::new(LEFT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
-    commands.spawn(WallBundle::new(Vec2::new(RIGHT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
-    commands.spawn(WallBundle::new(Vec2::new(0., MIDDLE_WALL), Vec2::new(arena_width + WALL_THICKNESS - 300., WALL_THICKNESS)));
-    commands.spawn(WallBundle::new(Vec2::new(0., BOTTOM_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
-    commands.spawn(WallBundle::new(Vec2::new(0., TOP_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
+    for wall in walls {
+        let wall_pos = wall[0];
+        let wall_size = wall[1];
+        commands.spawn(WallBundle::new(Vec2::new(wall_pos[0], wall_pos[1]), Vec2::new(wall_size[0], wall_size[1])));
+    }
+
 
     app_state_next_state.set(AppState::DeadBall);
     println!("Entered AppState::DeadBall");

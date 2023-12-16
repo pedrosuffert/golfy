@@ -173,7 +173,7 @@ pub fn check_ball_inside_hole(
     let hole_position = hole_query.single().translation;
     let distance = ball_position.distance(hole_position);
 
-    if distance <= GOLF_HOLE_SIZE.length() / 5.0 {
+    if distance <= GOLF_HOLE_SIZE.length() / 2.0 {
         app_state_next_state.set(GameState::UnloadingMap);
         println!("Entered AppState::UnloadingMap");
     }

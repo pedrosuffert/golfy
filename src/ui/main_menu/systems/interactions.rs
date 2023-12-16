@@ -13,7 +13,8 @@ pub fn interact_with_play_button (
         match *interaction {
             Interaction::Pressed => {
                 *backgroud_color = PRESSED_BUTTON_COLOR.into();
-                app_state_next_state.set(AppState::LoadingMap);
+                app_state_next_state.set(AppState::Game);
+                println!("Entered AppState::Game");
             }
             Interaction::Hovered => {
                 *backgroud_color = HOVERED_BUTTON_COLOR.into();

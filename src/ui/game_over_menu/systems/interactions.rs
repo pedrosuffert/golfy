@@ -16,7 +16,8 @@ pub fn interact_with_restart_button(
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();
-                app_state_next_state.set(AppState::LoadingMap);
+                app_state_next_state.set(AppState::Game);
+                println!("Entered AppState::Game");
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();

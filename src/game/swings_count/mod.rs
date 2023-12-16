@@ -7,6 +7,9 @@ pub struct Scoreboard {
     pub score: usize,
 }
 
+#[derive(Component)]
+pub struct Seksu;
+
 const SCOREBOARD_FONT_SIZE: f32 = 40.0;
 const SCOREBOARD_TEXT_PADDING: Val = Val::Px(5.0);
 const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
@@ -18,14 +21,14 @@ pub struct SwingsPlugins;
 impl Plugin for SwingsPlugins {
     fn build(&self, app: &mut App) {
         app.insert_resource(Scoreboard { score: 0 })
-            .add_systems(OnExit(AppState::MainMenu), spawn_swings)
-            .add_systems(OnEnter(AppState::MainMenu), despawn_swings);
+            .add_systems(OnEnter(AppState::Game), spawn_swings)
+            .add_systems(OnExit(AppState::Game), despawn_swings);
     }
 }
 
 fn spawn_swings(mut commands: Commands) {
     // Scoreboard
-    commands.spawn(
+    commands.spawn((
         TextBundle::from_sections([
             TextSection::new(
                 "Swings: ",
@@ -47,7 +50,8 @@ fn spawn_swings(mut commands: Commands) {
             left: SCOREBOARD_TEXT_PADDING,
             ..default()
         }),
-    );
+        Seksu,
+    ));
 }
 
 fn despawn_swings(mut commands: Commands, swings_query: Query<Entity, With<Text>>) {

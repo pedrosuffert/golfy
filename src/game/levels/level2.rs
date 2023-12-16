@@ -4,27 +4,29 @@ use bevy::{
     sprite::MaterialMesh2dBundle,
 };
 
-use crate::AppState;
-use crate::GolfHole;
-use crate::Ball;
-use crate::Velocity;
-use crate::Collider;
+use crate::game::GameState;
+use crate::game::GolfHole;
+use crate::game::Ball;
+use crate::game::Velocity;
+use crate::game::Collider;
 use crate::GOLF_HOLE_COLOR;
 use crate::GOLF_HOLE_SIZE;
 use crate::BALL_COLOR;
 use crate::BALL_SIZE;
 
-const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(650.0, 300.0, 0.0);
+const GOLF_HOLE_STARTING_POSITION: Vec3 = Vec3::new(-750.0, 280.0, 0.0);
 const BALL_SPEED: f32 = 500.0;
-const BALL_STARTING_POSITION: Vec3 = Vec3::new(-670.0, -330.0, 2.0);
+const BALL_STARTING_POSITION: Vec3 = Vec3::new(-750.0, -280.0, 2.0);
 const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);const WALL_THICKNESS: f32 = 30.0;
 // x coordinates
-const LEFT_WALL: f32 = -700.;
-const RIGHT_WALL: f32 = 700.;
+const LEFT_WALL: f32 = -800.;
+const RIGHT_MIDDLE_WALL: f32 = 500.;
+const RIGHT_WALL: f32 = 800.;
 // y coordinates
 const BOTTOM_WALL: f32 = -350.;
+const BOTTOM_TOP_WALL: f32 = -100.;
 const TOP_WALL: f32 = 350.;
-const MIDDLE_WALL: f32 = 0.;
+const TOP_BOTTOM_WALL: f32 = 100.;
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 
 
@@ -65,11 +67,11 @@ impl WallBundle {
     }
 }
 
-pub fn load_level_1(
+pub fn load_level_2(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut app_state_next_state: ResMut<NextState<AppState>>,
+    mut app_state_next_state: ResMut<NextState<GameState>>,
 ) {
     // Golf Hole
     commands.spawn((
@@ -99,12 +101,15 @@ pub fn load_level_1(
     let arena_width = RIGHT_WALL - LEFT_WALL;
 
     // Walls
-    commands.spawn(WallBundle::new(Vec2::new(LEFT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(LEFT_WALL, -225.), Vec2::new(WALL_THICKNESS, 250.)));
+    commands.spawn(WallBundle::new(Vec2::new(LEFT_WALL, 225.), Vec2::new(WALL_THICKNESS, 250.) ));
     commands.spawn(WallBundle::new(Vec2::new(RIGHT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
-    commands.spawn(WallBundle::new(Vec2::new(0., MIDDLE_WALL), Vec2::new(arena_width + WALL_THICKNESS - 300., WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(RIGHT_MIDDLE_WALL, 0.), Vec2::new(WALL_THICKNESS, 200.)));
     commands.spawn(WallBundle::new(Vec2::new(0., BOTTOM_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(-150., BOTTOM_TOP_WALL), Vec2::new(arena_width + WALL_THICKNESS - 300., WALL_THICKNESS)));
     commands.spawn(WallBundle::new(Vec2::new(0., TOP_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(-150., TOP_BOTTOM_WALL), Vec2::new(arena_width + WALL_THICKNESS - 300., WALL_THICKNESS)));
 
-    app_state_next_state.set(AppState::DeadBall);
+    app_state_next_state.set(GameState::DeadBall);
     println!("Entered AppState::DeadBall");
 }

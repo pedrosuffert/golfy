@@ -5,7 +5,7 @@ use level1::*;
 mod level2;
 use level2::*;
 
-use crate::AppState;
+use crate::GameState;
 
 #[derive(Resource, PartialEq)]
 pub struct Level(pub i32);
@@ -21,11 +21,12 @@ impl Plugin for LevelsPlugins {
             .insert_resource(ClearColor(BACKGROUND_COLOR))
             // OnEnter Systems
             .add_systems(
-                OnEnter(AppState::LoadingMap),
+                OnEnter(GameState::LoadingMap),
                 (
-                    // load_level_1.run_if(resource_equals(Level(1))),
-                    load_level_2.run_if(resource_equals(Level(1))),
+                    load_level_1.run_if(resource_equals(Level(1))),
+                    load_level_2.run_if(resource_equals(Level(2))),
                 ),
             );
     }
 }
+

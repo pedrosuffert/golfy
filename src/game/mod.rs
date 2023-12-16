@@ -18,6 +18,7 @@ pub mod levels;
 use levels::*;
 
 use crate::AppState;
+use crate::GameOver;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 pub enum GameState {
@@ -38,6 +39,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::rgb_u8(43, 44, 47)))
             .add_event::<CollisionEvent>()
+            .add_event::<GameOver>()
             .add_plugins(SwingsPlugins)
             .add_state::<GameState>()
             .add_plugins(LevelsPlugins)
@@ -62,7 +64,7 @@ impl Plugin for GamePlugin {
                     .run_if(in_state(GameState::BallMoving)), // `chain`ing systems together runs them in order
             )
             .add_systems(OnEnter(GameState::UnloadingMap), (unload_map, set_load_map_state).chain())
-            .add_systems(OnEnter(GameState::OutOfGame), unload_map)
+            .add_systems(OnEnter(GameState::OutOfGame), (unload_map, reset_load_map_state).chain())
             ;
     }
 }

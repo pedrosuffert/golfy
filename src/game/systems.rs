@@ -10,6 +10,7 @@ use crate::game::levels::Level;
 use crate::game::swings_count::Scoreboard;
 use crate::game::swings_count::Seksu;
 use crate::game::GameState;
+use crate::GameOver;
 use crate::*;
 // use crate::game::levels::*;
 
@@ -204,6 +205,12 @@ pub fn set_load_map_state(
     level_resource.0 += 1;
     app_state_next_state.set(GameState::LoadingMap);
     println!("Entered AppState::LoadingMap");
+}
+
+pub fn reset_load_map_state (
+    mut level_resource: ResMut<Level>,
+) {
+    level_resource.0 = 1;
 }
 
 pub fn uptade_ball_velocity(

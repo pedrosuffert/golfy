@@ -33,6 +33,8 @@ const GOLF_HOLE_COLOR: Color = Color::BLACK;
 const VELOCITY_VECTOR_QUERY: Color = Color::DARK_GRAY;
 const VELOCITY_VECTOR_QUAD_SIZE: Vec3 = Vec3::new(4.0, 100.0, 0.0);
 const VELOCITY_VECTOR_TRIANGLE_SIZE: Vec3 = Vec3::new(25.0, 25.0, 0.0);
+const VELOCITY_VECTOR_SIZE: f32 = 275.;
+const VELOCITY_FACTOR: f32 = 3.5;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 pub enum AppState {
@@ -183,7 +185,6 @@ fn set_ball_velocity(
     mut scoreboard: ResMut<Scoreboard>,
 ) {
 
-
     // Calculate ball velocity vector
     let (mut ball_velocity, ball_transform) = ball_query.single_mut();
     let cursor_position = window_query
@@ -198,16 +199,23 @@ fn set_ball_velocity(
         -cursor_position.y + (window_query.single_mut().height() / 2.0 - ball_position.y),
     );
 
-    // Rotate vector arrow
     let mut vector_quad = vector_quad_query.single_mut();
+    let mut vector_triangle = vector_triangle_query.single_mut();
+
+    let hipotenusa = ball_velocity_vector.length();
+
+    if hipotenusa > VELOCITY_VECTOR_SIZE {
+        ball_velocity_vector.x = VELOCITY_VECTOR_SIZE * (ball_velocity_vector.x/hipotenusa);
+        ball_velocity_vector.y = VELOCITY_VECTOR_SIZE * (ball_velocity_vector.y/hipotenusa);
+    }
+
+    // Rotate vector arrow
     vector_quad.translation.x = ball_velocity_vector.x / 2.0 + ball_position.x;
     vector_quad.translation.y = ball_velocity_vector.y / 2.0 + ball_position.y;
     vector_quad.scale.y = ball_velocity_vector.length();
 
-    let mut vector_triangle = vector_triangle_query.single_mut();
     vector_triangle.translation.x = ball_velocity_vector.x + ball_position.x;
     vector_triangle.translation.y = ball_velocity_vector.y + ball_position.y;
-
 
     let vector_orient = PI/2.0;
     let mut angle_to_target = ball_velocity_vector.y.atan2(ball_velocity_vector.x);
@@ -218,19 +226,15 @@ fn set_ball_velocity(
     vector_quad.rotation = Quat::from_rotation_z(angle_to_rotate);
     vector_triangle.rotation = Quat::from_rotation_z(angle_to_rotate);
 
-    if ball_velocity_vector.x.abs() > 700. {
-        ball_velocity_vector.x = ball_velocity_vector.x.signum() * 700.;
-    }
-    if ball_velocity_vector.y.abs() > 700. {
-        ball_velocity_vector.y = ball_velocity_vector.y.signum() * 700.;
-    }
+    ball_velocity_vector.x *= VELOCITY_FACTOR;
+    ball_velocity_vector.y *= VELOCITY_FACTOR;
 
     if mouse_input.pressed(MouseButton::Left) {
         scoreboard.score += 1;
         *ball_velocity = Velocity(ball_velocity_vector);
         app_state_next_state.set(AppState::BallMoving);
-
     }
+
 }
 
 fn unspawn_velocity_vector(
@@ -332,8 +336,8 @@ fn uptade_ball_velocity(
     } else {
         let sum = ball_velocity.x.abs() + ball_velocity.y.abs();
         if sum >= 0.0 {
-            ball_velocity.x -= 5.0 * ball_velocity.x.signum() * (ball_velocity.x.abs() / sum);
-            ball_velocity.y -= 5.0 * ball_velocity.y.signum() * (ball_velocity.y.abs() / sum);
+            ball_velocity.x -= 2.75 * ball_velocity.x.signum() * (ball_velocity.x.abs() / sum);
+            ball_velocity.y -= 2.75 * ball_velocity.y.signum() * (ball_velocity.y.abs() / sum);
         }
     }
 }

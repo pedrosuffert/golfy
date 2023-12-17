@@ -10,6 +10,7 @@ use crate::game::levels::Level;
 use crate::game::swings_count::Scoreboard;
 use crate::game::swings_count::Seksu;
 use crate::game::GameState;
+use crate::AppState::GameOver;
 use crate::*;
 // use crate::game::levels::*;
 
@@ -173,7 +174,7 @@ pub fn check_ball_inside_hole(
     let hole_position = hole_query.single().translation;
     let distance = ball_position.distance(hole_position);
 
-    if distance <= GOLF_HOLE_SIZE.length() / 2.0 {
+    if distance <= GOLF_HOLE_SIZE.length() / 2.5 {
         app_state_next_state.set(GameState::UnloadingMap);
         println!("Entered AppState::UnloadingMap");
     }
@@ -198,12 +199,26 @@ pub fn unload_map(
 }
 
 pub fn set_load_map_state(
-    mut app_state_next_state: ResMut<NextState<GameState>>,
+    mut game_state_next_state: ResMut<NextState<GameState>>,
+    mut app_state_next_state: ResMut<NextState<AppState>>,
     mut level_resource: ResMut<Level>,
 ) {
-    level_resource.0 += 1;
-    app_state_next_state.set(GameState::LoadingMap);
-    println!("Entered AppState::LoadingMap");
+    if level_resource.0 == 3 {
+        app_state_next_state.set(AppState::GameOver);
+        game_state_next_state.set(GameState::OutOfGame);
+        println!("Entered AppState::GameOver");
+        println!("Entered GameState::OutOfGame");
+    } else {
+        level_resource.0 += 1;
+        game_state_next_state.set(GameState::LoadingMap);
+        println!("Entered GameState::LoadingMap");
+    }
+}
+
+pub fn reset_load_map_state (
+    mut level_resource: ResMut<Level>,
+) {
+    level_resource.0 = 1;
 }
 
 pub fn uptade_ball_velocity(

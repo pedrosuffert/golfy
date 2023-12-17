@@ -1,10 +1,17 @@
 use bevy::{prelude::*, transform::commands};
 
 use crate::AppState;
+use crate::GameOver;
 
 #[derive(Resource)]
 pub struct Scoreboard {
     pub score: usize,
+}
+
+impl Default for Scoreboard {
+    fn default() -> Scoreboard {
+        Scoreboard {score: 0}
+    }
 }
 
 #[derive(Component)]
@@ -20,9 +27,10 @@ pub struct SwingsPlugins;
 
 impl Plugin for SwingsPlugins {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Scoreboard { score: 0 })
+        app.add_systems(OnEnter(AppState::Game), insert_score)
             .add_systems(OnEnter(AppState::Game), spawn_swings)
-            .add_systems(OnExit(AppState::Game), despawn_swings);
+            .add_systems(OnExit(AppState::Game), despawn_swings)
+            .add_systems(OnExit(AppState::Game), remove_score);
     }
 }
 
@@ -58,4 +66,17 @@ fn despawn_swings(mut commands: Commands, swings_query: Query<Entity, With<Text>
     if !swings_query.is_empty() {
         commands.entity(swings_query.single()).despawn();
     }
+}
+
+pub fn insert_score(mut commands: Commands) {
+    commands.insert_resource(Scoreboard::default())
+}
+
+pub fn remove_score(
+    mut commands: Commands,
+    mut game_over_event_writer: EventWriter<GameOver>,
+    scoreboard: Res<Scoreboard>,
+) {
+    game_over_event_writer.send(GameOver {final_score: scoreboard.score});
+    commands.remove_resource::<Scoreboard>();
 }

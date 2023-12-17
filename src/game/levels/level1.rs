@@ -101,7 +101,7 @@ pub fn load_level_1(
     // Walls
     commands.spawn(WallBundle::new(Vec2::new(LEFT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
     commands.spawn(WallBundle::new(Vec2::new(RIGHT_WALL, 0.), Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)));
-    // commands.spawn(WallBundle::new(Vec2::new(0., MIDDLE_WALL), Vec2::new(arena_width + WALL_THICKNESS - 300., WALL_THICKNESS)));
+    commands.spawn(WallBundle::new(Vec2::new(0., MIDDLE_WALL), Vec2::new(arena_width + WALL_THICKNESS - 300., WALL_THICKNESS)));
     commands.spawn(WallBundle::new(Vec2::new(0., BOTTOM_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
     commands.spawn(WallBundle::new(Vec2::new(0., TOP_WALL), Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)));
 

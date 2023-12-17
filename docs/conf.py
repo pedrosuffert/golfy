@@ -8,7 +8,7 @@
 
 project = 'golfy'
 copyright = '2023, luis schwab, pedro brazil, pedro venzi, renan delgado, thiago vale'
-author = 'luis schwab, pedro brazil, pedro venzi, renan delgado, thiago vale'
+#author = 'luis schwab, pedro brazil, pedro venzi, renan delgado, thiago vale'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -23,5 +23,6 @@ language = 'pt_BR'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+#html_theme = 'groundwork'
+html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']

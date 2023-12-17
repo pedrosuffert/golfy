@@ -3,18 +3,25 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to golfy's documentation!
+.. |logo| image:: _img/golfy.enc
+   :scale: 10%
+
+|logo| Golfy
 =================================
 
+Golfy é um simulador de golfe, escrito em Rust, utilizando a 
+engine Bevy, e compilado para WebAssembly.
+
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   
+   quickstart
+   rust
+   webasm
+   bevy
+   golfy
 
 
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

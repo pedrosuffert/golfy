@@ -7,3 +7,4 @@ Projeto final da matéria Linguagens de Programação UnB
 - cargo install wasm-server-runner
 - cargo run --target wasm32-unknown-unknown
 
+pushing to main 🤙

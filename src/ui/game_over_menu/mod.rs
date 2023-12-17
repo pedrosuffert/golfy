@@ -13,7 +13,7 @@ pub struct GameOverMenuPlugin;
 
 impl Plugin for GameOverMenuPlugin {
     fn build(&self, app: &mut App) {
-        app
+        app.add_systems(OnEnter(AppState::GameOver),insert_restart_clicked)
             // OnEnter State Systems
             .add_systems(OnEnter(AppState::GameOver),spawn_game_over_menu)
             .add_systems(Update,
@@ -25,6 +25,7 @@ impl Plugin for GameOverMenuPlugin {
                 ).run_if(in_state(AppState::GameOver))
             )
             // // OnExit State Systems
-            .add_systems(OnExit(AppState::GameOver),despawn_game_over_menu);
+            .add_systems(OnExit(AppState::GameOver),despawn_game_over_menu)
+            .add_systems(OnExit(AppState::GameOver),remove_restart_clicked);
     }
 }

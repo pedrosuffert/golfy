@@ -41,8 +41,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
         .add_state::<AppState>()
-        .add_plugins(GameUIPlugin)
         .add_plugins(GamePlugin)
+        .add_plugins(GameUIPlugin)
         .add_systems(Update, transition_to_main_menu_state)
         .add_systems(Update, transition_to_game_over_menu_state)
         .add_systems(OnEnter(AppState::Game), enter_game_state)
@@ -62,7 +62,7 @@ struct CollisionSound(Handle<AudioSource>);
 
 #[derive(Event)]
 pub struct GameOver {
-    pub score: u32,
+    pub final_score: usize,
 }
 
 // Add the game's entities to our world

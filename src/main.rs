@@ -1,5 +1,3 @@
-//! A simplified implementation of the classic game "Breakout".
-
 use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
